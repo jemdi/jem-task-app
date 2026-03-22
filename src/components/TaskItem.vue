@@ -1,5 +1,5 @@
 <template>
-  <li class="task-item" :class="{ completed: task.completed }">
+  <li class="task-item" :class="{ completed: task.completed, overdue: isOverdue }">
     <input
       type="checkbox"
       class="task-checkbox"
@@ -8,13 +8,20 @@
     />
 
     <template v-if="isEditing">
-      <input
-        ref="editInput"
-        v-model="editTitle"
-        class="task-edit-input"
-        @keyup.enter="save"
-        @keyup.escape="cancel"
-      />
+      <div class="task-edit-fields">
+        <input
+          ref="editInput"
+          v-model="editTitle"
+          class="task-edit-input"
+          @keyup.enter="save"
+          @keyup.escape="cancel"
+        />
+        <input
+          v-model="editScheduledAt"
+          type="datetime-local"
+          class="task-edit-time"
+        />
+      </div>
       <div class="task-actions">
         <button class="btn btn-save" @click="save">Save</button>
         <button class="btn btn-cancel" @click="cancel">Cancel</button>
@@ -22,7 +29,12 @@
     </template>
 
     <template v-else>
-      <span class="task-title" :class="{ done: task.completed }">{{ task.title }}</span>
+      <div class="task-info">
+        <span class="task-title" :class="{ done: task.completed }">{{ task.title }}</span>
+        <span v-if="task.scheduledAt" class="task-time" :class="{ overdue: isOverdue }">
+          {{ isOverdue ? '⚠ Overdue · ' : '🕐 ' }}{{ formatTime(task.scheduledAt) }}
+        </span>
+      </div>
       <div class="task-actions">
         <button class="btn btn-edit" @click="startEdit">Edit</button>
         <button class="btn btn-danger" @click="deleteTask(task.id)" title="Delete">✕</button>
@@ -32,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useTasks } from '../composables/useTasks'
 
 const props = defineProps({
@@ -43,10 +55,26 @@ const { toggleTask, updateTask, deleteTask } = useTasks()
 
 const isEditing = ref(false)
 const editTitle = ref('')
+const editScheduledAt = ref('')
 const editInput = ref(null)
+
+const isOverdue = computed(() => {
+  if (!props.task.scheduledAt || props.task.completed) return false
+  return new Date(props.task.scheduledAt) < new Date()
+})
+
+function formatTime(isoString) {
+  return new Date(isoString).toLocaleString(undefined, {
+    month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  })
+}
 
 async function startEdit() {
   editTitle.value = props.task.title
+  editScheduledAt.value = props.task.scheduledAt
+    ? props.task.scheduledAt.slice(0, 16)
+    : ''
   isEditing.value = true
   await nextTick()
   editInput.value?.focus()
@@ -54,7 +82,7 @@ async function startEdit() {
 
 function save() {
   if (!editTitle.value.trim()) return
-  updateTask(props.task.id, editTitle.value)
+  updateTask(props.task.id, editTitle.value, editScheduledAt.value || null)
   isEditing.value = false
 }
 

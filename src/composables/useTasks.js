@@ -26,14 +26,15 @@ const filteredTasks = computed(() => {
 
 const remainingCount = computed(() => tasks.value.filter(t => !t.completed).length)
 
-function addTask(title) {
+function addTask(title, scheduledAt = null) {
   const trimmed = title.trim()
   if (!trimmed) return
   tasks.value.push({
     id: crypto.randomUUID(),
     title: trimmed,
     completed: false,
-    createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+    scheduledAt: scheduledAt || null
   })
 }
 
@@ -42,11 +43,14 @@ function toggleTask(id) {
   if (task) task.completed = !task.completed
 }
 
-function updateTask(id, newTitle) {
+function updateTask(id, newTitle, scheduledAt) {
   const trimmed = newTitle.trim()
   if (!trimmed) return
   const task = tasks.value.find(t => t.id === id)
-  if (task) task.title = trimmed
+  if (task) {
+    task.title = trimmed
+    task.scheduledAt = scheduledAt || null
+  }
 }
 
 function deleteTask(id) {
