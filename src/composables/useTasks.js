@@ -1,5 +1,7 @@
 import { ref, computed } from 'vue'
 
+const API = import.meta.env.VITE_API_URL || ''
+
 const tasks = ref([])
 const activeFilter = ref('all')
 
@@ -12,14 +14,14 @@ const filteredTasks = computed(() => {
 const remainingCount = computed(() => tasks.value.filter(t => !t.completed).length)
 
 async function fetchTasks() {
-  const res = await fetch('/api/tasks')
+  const res = await fetch(`${API}/api/tasks`)
   tasks.value = await res.json()
 }
 
 async function addTask(title, scheduledAt = null, notes = null) {
   const trimmed = title.trim()
   if (!trimmed) return
-  const res = await fetch('/api/tasks', {
+  const res = await fetch(`${API}/api/tasks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title: trimmed, scheduledAt: scheduledAt || null, notes: notes || null })
@@ -31,7 +33,7 @@ async function addTask(title, scheduledAt = null, notes = null) {
 async function toggleTask(id) {
   const task = tasks.value.find(t => t.id === id)
   if (!task) return
-  const res = await fetch(`/api/tasks/${id}`, {
+  const res = await fetch(`${API}/api/tasks/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ completed: !task.completed })
@@ -44,7 +46,7 @@ async function toggleTask(id) {
 async function updateTask(id, newTitle, scheduledAt, notes) {
   const trimmed = newTitle.trim()
   if (!trimmed) return
-  const res = await fetch(`/api/tasks/${id}`, {
+  const res = await fetch(`${API}/api/tasks/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title: trimmed, scheduledAt: scheduledAt || null, notes: notes || null })
@@ -55,13 +57,13 @@ async function updateTask(id, newTitle, scheduledAt, notes) {
 }
 
 async function deleteTask(id) {
-  await fetch(`/api/tasks/${id}`, { method: 'DELETE' })
+  await fetch(`${API}/api/tasks/${id}`, { method: 'DELETE' })
   const index = tasks.value.findIndex(t => t.id === id)
   if (index !== -1) tasks.value.splice(index, 1)
 }
 
 async function clearCompleted() {
-  await fetch('/api/tasks/completed', { method: 'DELETE' })
+  await fetch(`${API}/api/tasks/completed`, { method: 'DELETE' })
   tasks.value = tasks.value.filter(t => !t.completed)
 }
 
