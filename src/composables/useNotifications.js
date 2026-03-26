@@ -1,7 +1,18 @@
-import { watch } from 'vue'
+import { watch, ref } from 'vue'
 import { useTasks } from './useTasks'
 
 const notified = new Set()
+const toasts = ref([])
+
+function remove(id) {
+  toasts.value = toasts.value.filter(t => t.id !== id)
+}
+
+function addToast(title, message, type) {
+  const id = Date.now()
+  toasts.value.push({ id, title, message, type })
+  setTimeout(() => remove(id), 6000)
+}
 
 function playSound() {
   const ctx = new AudioContext()
@@ -25,9 +36,12 @@ function playSound() {
   beep(now + 0.36, 1100, 0.3)
 }
 
-function notify(title, body) {
-  new Notification(title, { body, icon: '/favicon.ico' })
+function notify(title, message, type) {
+  addToast(title, message, type)
   playSound()
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body: message, icon: '/favicon.ico' })
+  }
 }
 
 function checkTasks(tasks) {
@@ -44,13 +58,17 @@ function checkTasks(tasks) {
     if (!notified.has(`${task.id}-warn`) && diff > 0 && diff <= five) {
       notified.add(`${task.id}-warn`)
       const mins = Math.ceil(diff / 60000)
-      notify('Task Due Soon', `"${task.title}" is due in ${mins} minute${mins !== 1 ? 's' : ''}.`)
+      notify(
+        'Task Due Soon',
+        `"${task.title}" is due in ${mins} minute${mins !== 1 ? 's' : ''}.`,
+        'warning'
+      )
     }
 
-    // Due now — fire within 2 minutes of the scheduled time to handle throttled timers
+    // Due now — fire within 2 minutes of the scheduled time
     if (!notified.has(`${task.id}-due`) && diff <= 0 && diff >= -dueCutoff) {
       notified.add(`${task.id}-due`)
-      notify('Task Started', `"${task.title}" is starting now!`)
+      notify('Task Started', `"${task.title}" is starting now!`, 'due')
     }
   })
 }
@@ -58,7 +76,7 @@ function checkTasks(tasks) {
 export function useNotifications() {
   const { tasks } = useTasks()
 
-  if (!('Notification' in window)) return
+  if (!('Notification' in window)) return { toasts, remove }
 
   if (Notification.permission === 'default') {
     Notification.requestPermission()
@@ -68,10 +86,9 @@ export function useNotifications() {
 
   const interval = setInterval(() => checkTasks(tasks.value), 30_000)
 
-  // Re-check immediately when user returns to the tab (browsers throttle timers in background)
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') checkTasks(tasks.value)
   })
 
-  return { stopNotifications: () => clearInterval(interval) }
+  return { toasts, remove, stopNotifications: () => clearInterval(interval) }
 }

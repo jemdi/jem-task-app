@@ -8,6 +8,7 @@
     <TaskInput />
     <TaskFilter />
     <TaskList />
+    <ToastList />
 
     <div class="task-footer" v-if="tasks.length > 0">
       <span>{{ remainingCount }} task{{ remainingCount !== 1 ? 's' : '' }} remaining</span>
@@ -28,6 +29,7 @@ import { useNotifications } from './composables/useNotifications'
 import TaskInput from './components/TaskInput.vue'
 import TaskFilter from './components/TaskFilter.vue'
 import TaskList from './components/TaskList.vue'
+import ToastList from './components/ToastList.vue'
 
 const { tasks, remainingCount, clearCompleted } = useTasks()
 useNotifications()
