@@ -24,9 +24,11 @@
 
 <script setup>
 import { useTasks } from './composables/useTasks'
+import { useNotifications } from './composables/useNotifications'
 import TaskInput from './components/TaskInput.vue'
 import TaskFilter from './components/TaskFilter.vue'
 import TaskList from './components/TaskList.vue'
 
 const { tasks, remainingCount, clearCompleted } = useTasks()
+useNotifications()
 </script>
