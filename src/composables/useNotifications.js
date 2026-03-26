@@ -91,22 +91,26 @@ function checkTasks(tasks) {
   })
 }
 
+let initialized = false
+
 export function useNotifications() {
   const { tasks } = useTasks()
 
-  if (!('Notification' in window)) return { toasts, remove }
+  if (!initialized) {
+    initialized = true
 
-  if (Notification.permission === 'default') {
-    Notification.requestPermission()
+    if ('Notification' in window) {
+      if (Notification.permission === 'default') Notification.requestPermission()
+
+      watch(tasks, (val) => checkTasks(val), { deep: true })
+
+      setInterval(() => checkTasks(tasks.value), 30_000)
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checkTasks(tasks.value)
+      })
+    }
   }
 
-  watch(tasks, (val) => checkTasks(val), { deep: true })
-
-  const interval = setInterval(() => checkTasks(tasks.value), 30_000)
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') checkTasks(tasks.value)
-  })
-
-  return { toasts, remove, stopNotifications: () => clearInterval(interval) }
+  return { toasts, remove }
 }
