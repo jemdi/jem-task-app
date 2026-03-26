@@ -33,7 +33,7 @@ function notify(title, body) {
 function checkTasks(tasks) {
   const now = Date.now()
   const five = 5 * 60 * 1000
-  const window = 30_000
+  const dueCutoff = 2 * 60 * 1000
 
   tasks.forEach(task => {
     if (task.completed || !task.scheduledAt) return
@@ -47,8 +47,8 @@ function checkTasks(tasks) {
       notify('Task Due Soon', `"${task.title}" is due in ${mins} minute${mins !== 1 ? 's' : ''}.`)
     }
 
-    // Due now (within the last 30 seconds)
-    if (!notified.has(`${task.id}-due`) && diff <= 0 && diff >= -window) {
+    // Due now — fire within 2 minutes of the scheduled time to handle throttled timers
+    if (!notified.has(`${task.id}-due`) && diff <= 0 && diff >= -dueCutoff) {
       notified.add(`${task.id}-due`)
       notify('Task Started', `"${task.title}" is starting now!`)
     }
@@ -67,6 +67,11 @@ export function useNotifications() {
   watch(tasks, (val) => checkTasks(val), { deep: true })
 
   const interval = setInterval(() => checkTasks(tasks.value), 30_000)
+
+  // Re-check immediately when user returns to the tab (browsers throttle timers in background)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkTasks(tasks.value)
+  })
 
   return { stopNotifications: () => clearInterval(interval) }
 }
