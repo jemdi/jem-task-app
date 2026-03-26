@@ -25,22 +25,32 @@ function playSound() {
   beep(now + 0.36, 1100, 0.3)
 }
 
+function notify(title, body) {
+  new Notification(title, { body, icon: '/favicon.ico' })
+  playSound()
+}
+
 function checkTasks(tasks) {
   const now = Date.now()
   const five = 5 * 60 * 1000
+  const window = 30_000
 
   tasks.forEach(task => {
-    if (task.completed || !task.scheduledAt || notified.has(task.id)) return
+    if (task.completed || !task.scheduledAt) return
     const due = new Date(task.scheduledAt).getTime()
     const diff = due - now
-    if (diff >= 0 && diff <= five) {
-      notified.add(task.id)
+
+    // 5-minute warning
+    if (!notified.has(`${task.id}-warn`) && diff > 0 && diff <= five) {
+      notified.add(`${task.id}-warn`)
       const mins = Math.ceil(diff / 60000)
-      new Notification('Task Due Soon', {
-        body: `"${task.title}" is due in ${mins} minute${mins !== 1 ? 's' : ''}.`,
-        icon: '/favicon.ico'
-      })
-      playSound()
+      notify('Task Due Soon', `"${task.title}" is due in ${mins} minute${mins !== 1 ? 's' : ''}.`)
+    }
+
+    // Due now (within the last 30 seconds)
+    if (!notified.has(`${task.id}-due`) && diff <= 0 && diff >= -window) {
+      notified.add(`${task.id}-due`)
+      notify('Task Started', `"${task.title}" is starting now!`)
     }
   })
 }
