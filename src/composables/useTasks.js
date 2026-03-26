@@ -2,6 +2,11 @@ import { ref, computed } from 'vue'
 
 const API = import.meta.env.VITE_API_URL || ''
 
+function toISO(localString) {
+  if (!localString) return null
+  return new Date(localString).toISOString()
+}
+
 const tasks = ref([])
 const activeFilter = ref('all')
 
@@ -24,7 +29,7 @@ async function addTask(title, scheduledAt = null, notes = null) {
   const res = await fetch(`${API}/api/tasks`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: trimmed, scheduledAt: scheduledAt || null, notes: notes || null })
+    body: JSON.stringify({ title: trimmed, scheduledAt: toISO(scheduledAt), notes: notes || null })
   })
   const newTask = await res.json()
   tasks.value.push(newTask)
@@ -49,7 +54,7 @@ async function updateTask(id, newTitle, scheduledAt, notes) {
   const res = await fetch(`${API}/api/tasks/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: trimmed, scheduledAt: scheduledAt || null, notes: notes || null })
+    body: JSON.stringify({ title: trimmed, scheduledAt: toISO(scheduledAt), notes: notes || null })
   })
   const updated = await res.json()
   const index = tasks.value.findIndex(t => t.id === id)
