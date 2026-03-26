@@ -17,6 +17,13 @@
         type="datetime-local"
       />
     </div>
+    <div class="task-input-notes">
+      <textarea
+        v-model="notes"
+        placeholder="Notes (optional)"
+        rows="2"
+      />
+    </div>
   </form>
 </template>
 
@@ -27,11 +34,13 @@ import { useTasks } from '../composables/useTasks'
 const { addTask } = useTasks()
 const newTitle = ref('')
 const scheduledAt = ref('')
+const notes = ref('')
 
 function submit() {
   if (!newTitle.value.trim()) return
-  addTask(newTitle.value, scheduledAt.value || null)
+  addTask(newTitle.value, scheduledAt.value || null, notes.value || null)
   newTitle.value = ''
   scheduledAt.value = ''
+  notes.value = ''
 }
 </script>

@@ -21,6 +21,12 @@
           type="datetime-local"
           class="task-edit-time"
         />
+        <textarea
+          v-model="editNotes"
+          class="task-edit-notes"
+          placeholder="Notes (optional)"
+          rows="2"
+        />
       </div>
       <div class="task-actions">
         <button class="btn btn-save" @click="save">Save</button>
@@ -34,6 +40,7 @@
         <span v-if="task.scheduledAt" class="task-time" :class="{ overdue: isOverdue }">
           {{ isOverdue ? '⚠ Overdue · ' : '🕐 ' }}{{ formatTime(task.scheduledAt) }}
         </span>
+        <span v-if="task.notes" class="task-notes">{{ task.notes }}</span>
       </div>
       <div class="task-actions">
         <button class="btn btn-edit" @click="startEdit">Edit</button>
@@ -56,6 +63,7 @@ const { toggleTask, updateTask, deleteTask } = useTasks()
 const isEditing = ref(false)
 const editTitle = ref('')
 const editScheduledAt = ref('')
+const editNotes = ref('')
 const editInput = ref(null)
 
 const isOverdue = computed(() => {
@@ -66,15 +74,22 @@ const isOverdue = computed(() => {
 function formatTime(isoString) {
   return new Date(isoString).toLocaleString(undefined, {
     month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit'
+    hour: '2-digit', minute: '2-digit', hour12: true
   })
+}
+
+function toLocalInput(isoString) {
+  const d = new Date(isoString)
+  const pad = n => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 async function startEdit() {
   editTitle.value = props.task.title
   editScheduledAt.value = props.task.scheduledAt
-    ? props.task.scheduledAt.slice(0, 16)
+    ? toLocalInput(props.task.scheduledAt)
     : ''
+  editNotes.value = props.task.notes || ''
   isEditing.value = true
   await nextTick()
   editInput.value?.focus()
@@ -82,7 +97,7 @@ async function startEdit() {
 
 function save() {
   if (!editTitle.value.trim()) return
-  updateTask(props.task.id, editTitle.value, editScheduledAt.value || null)
+  updateTask(props.task.id, editTitle.value, editScheduledAt.value || null, editNotes.value || null)
   isEditing.value = false
 }
 

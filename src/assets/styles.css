@@ -303,6 +303,44 @@ body {
   border-color: var(--color-primary);
 }
 
+.task-edit-notes {
+  padding: 0.25rem 0.5rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 4px;
+  font-size: 0.82rem;
+  outline: none;
+  color: var(--color-text);
+  resize: vertical;
+  font-family: inherit;
+}
+
+.task-edit-notes:focus {
+  border-color: var(--color-primary);
+}
+
+.task-notes {
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  white-space: pre-wrap;
+}
+
+.task-input-notes textarea {
+  width: 100%;
+  padding: 0.6rem 0.875rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  color: var(--color-text);
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+
+.task-input-notes textarea:focus {
+  border-color: var(--color-primary);
+}
+
 .task-actions {
   display: flex;
   gap: 0.25rem;

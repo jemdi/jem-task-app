@@ -9,7 +9,8 @@ function mapTask(row) {
     title: row.title,
     completed: row.completed,
     createdAt: row.created_at,
-    scheduledAt: row.scheduled_at
+    scheduledAt: row.scheduled_at,
+    notes: row.notes
   }
 }
 
@@ -26,10 +27,10 @@ router.get('/', async (req, res) => {
 // POST /api/tasks
 router.post('/', async (req, res) => {
   try {
-    const { title, scheduledAt } = req.body
+    const { title, scheduledAt, notes } = req.body
     const { rows } = await pool.query(
-      'INSERT INTO tasks (title, scheduled_at) VALUES ($1, $2) RETURNING *',
-      [title, scheduledAt || null]
+      'INSERT INTO tasks (title, scheduled_at, notes) VALUES ($1, $2, $3) RETURNING *',
+      [title, scheduledAt || null, notes || null]
     )
     res.status(201).json(mapTask(rows[0]))
   } catch (err) {
@@ -41,7 +42,7 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const { title, completed, scheduledAt } = req.body
+    const { title, completed, scheduledAt, notes } = req.body
 
     const fields = []
     const values = []
@@ -50,6 +51,7 @@ router.patch('/:id', async (req, res) => {
     if (title !== undefined) { fields.push(`title = $${idx++}`); values.push(title) }
     if (completed !== undefined) { fields.push(`completed = $${idx++}`); values.push(completed) }
     if (scheduledAt !== undefined) { fields.push(`scheduled_at = $${idx++}`); values.push(scheduledAt || null) }
+    if (notes !== undefined) { fields.push(`notes = $${idx++}`); values.push(notes || null) }
 
     if (fields.length === 0) return res.status(400).json({ error: 'No fields to update' })
 

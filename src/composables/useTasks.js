@@ -16,13 +16,13 @@ async function fetchTasks() {
   tasks.value = await res.json()
 }
 
-async function addTask(title, scheduledAt = null) {
+async function addTask(title, scheduledAt = null, notes = null) {
   const trimmed = title.trim()
   if (!trimmed) return
   const res = await fetch('/api/tasks', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: trimmed, scheduledAt: scheduledAt || null })
+    body: JSON.stringify({ title: trimmed, scheduledAt: scheduledAt || null, notes: notes || null })
   })
   const newTask = await res.json()
   tasks.value.push(newTask)
@@ -41,13 +41,13 @@ async function toggleTask(id) {
   if (index !== -1) tasks.value[index] = updated
 }
 
-async function updateTask(id, newTitle, scheduledAt) {
+async function updateTask(id, newTitle, scheduledAt, notes) {
   const trimmed = newTitle.trim()
   if (!trimmed) return
   const res = await fetch(`/api/tasks/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: trimmed, scheduledAt: scheduledAt || null })
+    body: JSON.stringify({ title: trimmed, scheduledAt: scheduledAt || null, notes: notes || null })
   })
   const updated = await res.json()
   const index = tasks.value.findIndex(t => t.id === id)
