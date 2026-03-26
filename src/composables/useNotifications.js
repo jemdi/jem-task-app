@@ -4,6 +4,23 @@ import { useTasks } from './useTasks'
 const notified = new Set()
 const toasts = ref([])
 
+// Single shared AudioContext — created once, resumed on user interaction
+let audioCtx = null
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new AudioContext()
+  return audioCtx
+}
+
+// Unlock audio on first user interaction so sounds play reliably
+function unlockAudio() {
+  getAudioCtx().resume()
+  document.removeEventListener('click', unlockAudio)
+  document.removeEventListener('keydown', unlockAudio)
+}
+document.addEventListener('click', unlockAudio)
+document.addEventListener('keydown', unlockAudio)
+
 function remove(id) {
   toasts.value = toasts.value.filter(t => t.id !== id)
 }
@@ -15,25 +32,26 @@ function addToast(title, message, type) {
 }
 
 function playSound() {
-  const ctx = new AudioContext()
+  const ctx = getAudioCtx()
+  ctx.resume().then(() => {
+    function beep(startTime, freq, duration) {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.value = freq
+      gain.gain.setValueAtTime(0.3, startTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration)
+      osc.start(startTime)
+      osc.stop(startTime + duration)
+    }
 
-  function beep(startTime, freq, duration) {
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.type = 'sine'
-    osc.frequency.value = freq
-    gain.gain.setValueAtTime(0.3, startTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration)
-    osc.start(startTime)
-    osc.stop(startTime + duration)
-  }
-
-  const now = ctx.currentTime
-  beep(now, 880, 0.15)
-  beep(now + 0.18, 880, 0.15)
-  beep(now + 0.36, 1100, 0.3)
+    const now = ctx.currentTime
+    beep(now, 880, 0.15)
+    beep(now + 0.18, 880, 0.15)
+    beep(now + 0.36, 1100, 0.3)
+  })
 }
 
 function notify(title, message, type) {
