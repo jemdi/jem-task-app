@@ -25,6 +25,9 @@ async function start() {
       notes TEXT
     )
   `)
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS tasks_created_at_idx ON tasks (created_at ASC)
+  `)
   console.log('Database ready.')
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`)

@@ -9,6 +9,7 @@ function toISO(localString) {
 
 const tasks = ref([])
 const activeFilter = ref('all')
+const loading = ref(false)
 
 const filteredTasks = computed(() => {
   if (activeFilter.value === 'active') return tasks.value.filter(t => !t.completed)
@@ -19,8 +20,13 @@ const filteredTasks = computed(() => {
 const remainingCount = computed(() => tasks.value.filter(t => !t.completed).length)
 
 async function fetchTasks() {
-  const res = await fetch(`${API}/api/tasks`)
-  tasks.value = await res.json()
+  loading.value = true
+  try {
+    const res = await fetch(`${API}/api/tasks`)
+    tasks.value = await res.json()
+  } finally {
+    loading.value = false
+  }
 }
 
 async function addTask(title, scheduledAt = null, notes = null) {
@@ -83,6 +89,7 @@ export function useTasks() {
     tasks,
     filteredTasks,
     activeFilter,
+    loading,
     remainingCount,
     addTask,
     toggleTask,
