@@ -18,7 +18,7 @@ async function login(username, password) {
   try {
     data = await res.json()
   } catch {
-    throw new Error('Server returned an unexpected response. Check your VITE_API_URL setting.')
+    throw new Error(`Bad response from: ${API}/api/auth/login (status ${res.status})`)
   }
   if (!res.ok) throw new Error(data.error || 'Invalid username or password')
   token.value = data.token
