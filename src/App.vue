@@ -1,7 +1,9 @@
 <template>
   <div class="card">
     <div class="app-header">
-      <h1>Jem Task App</h1>
+      <span class="channel-hash">#</span>
+      <h1>tasks</h1>
+      <span class="header-divider">|</span>
       <p>Stay on top of your tasks</p>
     </div>
 
