@@ -2,7 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import { pool } from './db.js'
+import authRouter from './routes/auth.js'
 import tasksRouter from './routes/tasks.js'
+import { requireAuth } from './middleware/auth.js'
 
 dotenv.config()
 
@@ -12,7 +14,8 @@ const PORT = process.env.PORT || 3001
 app.use(cors())
 app.use(express.json())
 
-app.use('/api/tasks', tasksRouter)
+app.use('/api/auth', authRouter)
+app.use('/api/tasks', requireAuth, tasksRouter)
 
 async function start() {
   await pool.query(`
